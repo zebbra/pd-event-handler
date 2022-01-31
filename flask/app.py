@@ -113,7 +113,10 @@ class PDEventHandler:
 
         @app.route("/health", methods=["GET"])
         def __health():
-            return("OK", 200)
+            if self.rlq_thread.isAlive():
+                return ("OK", 200)
+
+            return ("Not alive", 500)
 
         # Default route for enqueuing requests
         @app.route("/", methods=["POST"])
