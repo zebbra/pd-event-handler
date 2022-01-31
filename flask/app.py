@@ -13,7 +13,8 @@ from waitress import serve
 
 # Global constants
 PD_EVENTS_API = "https://events.pagerduty.com/v2/enqueue"
-PD_RATE_LIMIT_CALLS_PER_MINUTE = 120
+PD_RATE_LIMIT_CALLS_PER = 60
+PD_RATE_LIMIT_CALLS_COUNT = 120
 
 # Configure logging
 logging.basicConfig(
@@ -35,7 +36,7 @@ class PDEventHandler:
         self.routing_key = os.environ.get("ROUTING_KEY")
         self.session = requests.Session()
         self.rlq = ratelimitqueue.RateLimitQueue(
-            calls=PD_RATE_LIMIT_CALLS_PER_MINUTE, per=60
+            calls=PD_RATE_LIMIT_CALLS_COUNT, per=PD_RATE_LIMIT_CALLS_PER
         )
         self.rlq_thread = threading.Thread(
             name="ratelimitqueue", target=self.__process_queue
