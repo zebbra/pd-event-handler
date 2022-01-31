@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import queue
 import sys
 import os
 import threading
@@ -90,24 +91,20 @@ class PDEventHandler:
 
     # Internal function to handle RLQ using background thread
     def __process_queue(self):
-        awaiting_requests = True
+        self.logger.info("Queue is empty - currently awaiting requests")
+
         while True:
-            # Process non-empty queue
             if self.rlq.qsize() > 0:
                 self.logger.info("Current queue size: %s", self.rlq.qsize())
 
-                pd_event_data = self.rlq.get()
+            try:
+                pd_event_data = self.rlq.get(timeout=PD_RATE_LIMIT_CALLS_PER * 2)
                 self.__pd_send_event(pd_event_data)
-
-                awaiting_requests = True
                 self.rlq.task_done()
-
-            # Handle when queue is empty
-            elif self.rlq.qsize() == 0:
-                self.logger.info(
-                    "Queue is empty - currently awaiting requests"
-                ) if awaiting_requests else None
-                awaiting_requests = False
+            except queue.Empty:
+                self.logger.info("Queue is empty - still awaiting requests")
+            except Exception as e:
+                self.logger.critical(e)
 
     # Handler entrypoint
     def start(self):
