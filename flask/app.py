@@ -107,6 +107,10 @@ class PDEventHandler:
         # Initialise Flask server
         app = Flask(__name__)
 
+        @app.route("/health", methods=["GET"])
+        def __health():
+            return("OK", 200)
+
         # Default route for enqueuing requests
         @app.route("/", methods=["POST"])
         def __enqueue_request():
