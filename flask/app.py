@@ -34,8 +34,7 @@ class PDEventHandler:
     def __init__(self):
         self.logger = logging.getLogger()
         self.hostname = os.environ.get("HOSTNAME")
-        self.container_idx = 1
-        self.routing_key = ""
+        self.routing_key = os.environ.get("ROUTING_KEY")
         self.session = requests.Session()
         self.rlq = ratelimitqueue.RateLimitQueue(
             calls=PD_RATE_LIMIT_CALLS_PER_MINUTE, per=60
@@ -45,46 +44,7 @@ class PDEventHandler:
         )
 
         # Additional initialisation routines
-        self.__get_container_index()
-        self.__assign_routing_key()
         self.__verify_routing_key()
-
-    # Identify container hostname index based on Docker API (via mounted socket)
-    def __get_container_index(self):
-        with requests_unixsocket.Session() as session:
-            try:
-                res = session.get(
-                    f"http+unix://%2Frun%2Fdocker.sock/containers/{self.hostname}/json"
-                )
-                res_json = res.json()
-                container_name = res_json["Name"]
-                container_id = res_json["Config"]["Hostname"]
-                self.container_idx = int(
-                    container_name.split("/pd-event-handler_flask_")[1]
-                )
-                self.logger.info(
-                    "Running on container pd-event-handler_flask_%s (ID: %s)",
-                    self.container_idx,
-                    container_id,
-                )
-            except (KeyError, requests.exceptions.ConnectionError):
-                # This occurs when container can't be found or if running script on local dev machine
-                self.logger.warning(
-                    "Unable to determine container name - defaulting to first routing key available"
-                )
-                self.container_idx = 1
-
-    # Dynamically get routing key from file depending on index of container
-    def __assign_routing_key(self):
-        with open("pd_routing_keys.txt", "r") as file:
-            reader = csv.reader(file)
-            routing_keys = [row[0] for row in reader]
-            try:
-                self.routing_key = routing_keys[self.container_idx - 1]
-                self.logger.info("Using Routing Key: %s", self.routing_key)
-            except IndexError:
-                self.logger.critical("Routing key unavailable - terminating server")
-                sys.exit(1)
 
     # Verify if PD routing key is valid via dummy resolve message; exit application if invalid
     def __verify_routing_key(self):

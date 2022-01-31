@@ -6,19 +6,8 @@ services:
     build:
       context: ./flask
       dockerfile: Dockerfile
-    volumes:
-      - ./flask:/opt
-      - /var/run/docker.sock:/run/docker.sock:ro  # macOS hosts (Comment/delete if on Unix)
-#      - /run/docker.sock:/run/docker.sock:ro      # Unix hosts (Uncomment if required)
+    env_file:
+      - .env
     expose:
       - "5000"
 
-  nginx:
-    image: nginx:1.20-alpine
-    container_name: nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "8080:8080"
-    depends_on:
-      - "flask"
