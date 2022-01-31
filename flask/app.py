@@ -75,6 +75,12 @@ class PDEventHandler:
         try:
             res = self.session.post(url=PD_EVENTS_API, json=pd_event_data)
             self.logger.info("PD server response: %s", res.json())
+        except requests.exceptions.RequestException as e:
+            self.logger.warning(
+                "Unable to process request (%s) - pushing to the back of the queue",
+                e,
+            )
+            self.rlq.put(pd_event_data)
         except json.decoder.JSONDecodeError:
             self.logger.warning(
                 "Unable to process request (Events API Status Code: %s) - pushing to the back of the queue",
