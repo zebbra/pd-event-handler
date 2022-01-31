@@ -9,7 +9,6 @@ Jinja2==3.0.3
 MarkupSafe==2.0.1
 ratelimitqueue==0.2.2
 requests==2.27.1
-requests-unixsocket==0.3.0
 typing-extensions==4.0.1
 urllib3==1.26.7
 waitress==2.0.0

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import sys
 import os
-import csv
 import threading
 import logging
 import json
 import datetime
 
 import requests
-import requests_unixsocket
 import ratelimitqueue
 from flask import Flask, request, jsonify
 from waitress import serve
